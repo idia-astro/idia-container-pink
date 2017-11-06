@@ -3,6 +3,9 @@ MirrorURL: http://archive.ubuntu.com/ubuntu/
 OSVersion: xenial
 Include: software-properties-common
 
+%environment
+export PATH=/software/pink/bin:$PATH
+
 %setup 
 cp pink-latest.tar $SINGULARITY_ROOTFS
 
@@ -23,3 +26,5 @@ cp pink-latest.tar $SINGULARITY_ROOTFS
         cd build
         cmake -DCMAKE_INSTALL_PREFIX=/software/pink  ..
         make -j 2
+	make install 
+
