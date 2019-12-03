@@ -1,17 +1,20 @@
-IMAGE=pink.img
+IMAGE=PINK.simg
+IMAGE_CUDA=PINK-cuda.simg
 DEF=pink.def
+DEF_CUDA=pink-cuda.def
 
-.PHONY: bootstrap
+.DEFAULT_GOAL := build
+.PHONY: build
 
-all: bootstrap
+all: build
 
-${IMAGE}:
-	sudo singularity create -s 4096 ${IMAGE}
+build:
+	@echo "Building ${IMAGE} from ${DEF}"
+	@sudo singularity build ${IMAGE} ${DEF}
 
-bootstrap: ${IMAGE}
-	sudo singularity bootstrap ${IMAGE} ${DEF}
+cuda:
+	@echo "Building ${IMAGE_CUDA} from ${DEF_CUDA}"
+	@sudo singularity build ${IMAGE_CUDA} ${DEF_CUDA}
 
-upgrade:
-	sudo singularity exec --writable ${IMAGE} apt-get update
-	sudo singularity exec --writable ${IMAGE} apt-get upgrade
-
+clean: 
+	rm *.simg
