@@ -1,0 +1,82 @@
+Bootstrap: debootstrap
+MirrorURL: http://archive.ubuntu.com/ubuntu/
+OSVersion: bionic
+Include: software-properties-common
+
+
+%labels
+
+    APPLICATION_NAME Ubuntu LTS + Nvidia CUDA + PINK
+    OS_VERSION 18.04 + 10.0 + 2.43
+    APPLICATION_URL https://developer.nvidia.com/cuda-zone + https://github.com/HITS-AIN/PINK.git
+
+    SYSTEM_NAME iLifu
+    SYSTEM_SINGULARITY_VERSION 2.6.1
+    SYSTEM_URL http://www.ilifu.ac.za
+
+    AUTHOR_NAME Jeremy Smith
+    AUTHOR_EMAIL jeremy@idia.ac.za
+
+%environment
+    # Set system locale
+    export LC_ALL=C
+    
+    # Nvidia CUDA Path
+    export CPATH="/usr/local/cuda/include:$CPATH"
+    export PATH="/usr/local/cuda/bin:$PATH"
+    export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu/:/usr/local/cuda/lib64:$LD_LIBRARY_PATH"
+    export CUDA_HOME="/usr/local/cuda"
+    
+    export PATH=/opt/pink/bin:$PATH
+
+%post -c /bin/bash
+
+
+    ##############################################################################
+    # Setting up Environment  
+    # Python3 MiniConda Default Path
+    #export PATH="/opt/miniconda3/bin:${PATH}"
+
+    # Nvidia CUDA Path
+    export CPATH="/usr/local/cuda/include:$CPATH"
+    export PATH="/usr/local/cuda/bin:$PATH"
+    export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu/:/usr/local/cuda/lib64:$LD_LIBRARY_PATH"
+    export CUDA_HOME="/usr/local/cuda"
+    ###############################################################################
+
+    # Declare variables for downloaded applications
+    declare -r CUDA_FILENAME=cuda_10.0.130_410.48_linux
+    #declare -r MINICONDA_FILENAME=Miniconda3-latest-Linux-x86_64.sh
+    declare -r NVIDIA_DEV_URL=https://developer.download.nvidia.com/compute
+ 
+    # Update Ubuntu Cache and begin install 
+    apt update -y
+    apt install -y wget gcc libxml2 curl gpg-agent build-essential git vim
+
+    # Download NVIDIA Cuda and begin install 
+    wget https://developer.nvidia.com/compute/cuda/10.0/Prod/local_installers/${CUDA_FILENAME}
+    chmod +x ${CUDA_FILENAME}
+    ./${CUDA_FILENAME} --toolkit --silent --no-drm --no-man-page --override
+   
+    # Download and install Nvidia Cudnn 7 and nccl2
+    wget ${NVIDIA_DEV_URL}/machine-learning/repos/ubuntu1804/x86_64/nvidia-machine-learning-repo-ubuntu1804_1.0.0-1_amd64.deb
+    dpkg -i nvidia-machine-learning-repo-ubuntu1804_1.0.0-1_amd64.deb
+    apt-key adv --fetch-keys ${NVIDIA_DEV_URL}/machine-learning/repos/ubuntu1804/x86_64/7fa2af80.pub
+    apt update -y 
+    apt install -y libc-ares-dev libcudnn7 libnccl2 libcudnn7-dev  
+
+    apt-get install -y gcc make cmake build-essential
+    mkdir -p /installer
+    cd /installer
+    git clone https://github.com/HITS-AIN/PINK.git
+    cd PINK
+    cmake -DCMAKE_INSTALL_PREFIX=/opt/PINK .
+    make install
+ 
+   # Clean Up 
+    apt clean
+    apt autoclean
+    apt autoremove -y 
+    rm -rf "/.cache" "/root/.cache"
+    rm /${CUDA_FILENAME}
+
